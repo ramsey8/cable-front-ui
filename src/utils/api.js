@@ -39,7 +39,7 @@ service.interceptors.response.use(
       return Promise.reject("未登录")
     } else {
       Message({
-        message: res.msg,
+        message: res.message,
         type: 'error',
         duration: 3 * 1000
       })

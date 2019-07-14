@@ -33,13 +33,13 @@ export const asyncRouterMap = [
     name: '功能模块',
     meta: {title: '功能模块', icon: 'tree'},
     children: [
-      {
-        path: 'article',
-        name: '文章',
-        component: _import('article/article'),
-        meta: {title: '文章', icon: 'example'},
-        menu: 'article'
-      },
+      // {
+      //   path: 'article',
+      //   name: '文章',
+      //   component: _import('article/article'),
+      //   meta: {title: '文章', icon: 'example'},
+      //   menu: 'article'
+      // },
     ]
   },
   {
@@ -58,14 +58,14 @@ export const asyncRouterMap = [
         component: _import('user/role'),
         meta: {title: '角色管理', icon: 'password'},
         menu: 'role'
-      },
-      {
-        path: 'permission',
-        name: '权限管理',
-        component: _import('user/permission'),
-        meta: {title: '权限管理', icon: 'password'},
-        menu: 'role'
       }
+      // {
+      //   path: 'permission',
+      //   name: '权限管理',
+      //   component: _import('user/permission'),
+      //   meta: {title: '权限管理', icon: 'password'},
+      //   menu: 'role'
+      // }
     ]
   },
   {path: '*', redirect: '/404', hidden: true}

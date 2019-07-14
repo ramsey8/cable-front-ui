@@ -3,7 +3,7 @@
     <div class="filter-container">
       <el-form>
         <el-form-item>
-          <el-button type="success" icon="plus" v-if="hasPerm('user:add')" @click="showCreate">添加角色
+          <el-button type="success" icon="plus" v-if="hasPerm('role:add')" @click="showCreate">添加角色
           </el-button>
         </el-form-item>
       </el-form>
@@ -15,15 +15,17 @@
           <span v-text="getIndex(scope.$index)"> </span>
         </template>
       </el-table-column>
-      <el-table-column align="center" label="角色" prop="roleName" width="150"></el-table-column>
-      <el-table-column align="center" label="用户">
+      <el-table-column align="center" label="角色" prop="roleName" width="200"></el-table-column>
+      <el-table-column align="center" label="创建日期" prop="createTime" width="250"></el-table-column>
+      <el-table-column align="center" label="修改日期" prop="updateTime" width="250"></el-table-column>
+      <!-- <el-table-column align="center" label="用户">
         <template slot-scope="scope">
           <div v-for="user in scope.row.users">
             <div v-text="user.nickname" style="display: inline-block;vertical-align: middle;"></div>
           </div>
         </template>
-      </el-table-column>
-      <el-table-column align="center" label="菜单&权限" width="420">
+      </el-table-column> -->
+      <el-table-column align="center" label="菜单&权限" width="500">
         <template slot-scope="scope">
           <el-tag v-if="scope.row.roleName==adminName" type="success">全部</el-tag>
           <div v-else>
@@ -41,7 +43,7 @@
           <div v-if="scope.row.roleName!='管理员'">
             <el-button type="primary" icon="edit" @click="showUpdate(scope.$index)" v-if="hasPerm('role:update')">修改
             </el-button>
-            <el-button v-if=" scope.row.users && scope.row.users.length===0 && hasPerm('role:delete')" type="danger"
+            <el-button v-if="hasPerm('role:delete')" type="danger"
                        icon="delete"
                        @click="removeRole(scope.$index)">
               删除
@@ -50,6 +52,7 @@
         </template>
       </el-table-column>
     </el-table>
+
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form class="small-space" :model="tempRole" label-position="left" label-width="100px"
                style='width: 600px; margin-left:50px;'>
@@ -60,7 +63,7 @@
         <el-form-item label="菜单&权限" required>
           <div v-for=" (menu,_index) in allPermission" :key="menu.menuName">
             <span style="width: 100px;display: inline-block;">
-              <el-button :type="isMenuNone(_index)?'':(isMenuAll(_index)?'success':'primary')" size="mini"
+              <el-button :type="isMenuAll(_index)?'success':'primary'" size="mini"
                          style="width:80px;"
                          @click="checkAll(_index)">{{menu.menuName}}</el-button>
             </span>
@@ -86,6 +89,7 @@
 </template>
 <script>
   export default {
+  
     data() {
       return {
         list: [],//表格的数据
@@ -102,7 +106,11 @@
           roleId: '',
           permissions: [],
         },
-        adminName: '管理员'
+        adminName: '管理员',
+        listQuery: {
+          pageNum: 1,//页码
+          pageRow: 50,//每页条数
+        }
       }
     },
     created() {
@@ -113,21 +121,21 @@
       getAllPermisson() {
         //查询所有权限
         this.api({
-          url: "/user/listAllPermission",
+          url: "/role/listAllPermission",
           method: "get"
         }).then(data => {
-          this.allPermission = data.list;
+          this.allPermission = data.data;
         })
       },
       getList() {
         //查询列表
         this.listLoading = true;
         this.api({
-          url: "/user/listRole",
+          url: "/role/listRole",
           method: "get"
         }).then(data => {
           this.listLoading = false;
-          this.list = data.list;
+          this.list = data.data;
         })
       },
       getIndex($index) {
@@ -145,12 +153,12 @@
       showUpdate($index) {
         let role = this.list[$index];
         this.tempRole.roleName = role.roleName;
-        this.tempRole.roleId = role.roleId;
+        this.tempRole.roleId = role.id;
         this.tempRole.permissions = [];
         for (let i = 0; i < role.menus.length; i++) {
           let perm = role.menus[i].permissions;
           for (let j = 0; j < perm.length; j++) {
-            this.tempRole.permissions.push(perm[j].permissionId);
+            this.tempRole.permissions.push(perm[j].id);
           }
         }
         this.dialogStatus = "update"
@@ -165,7 +173,7 @@
         }
         //添加新角色
         this.api({
-          url: "/user/addRole",
+          url: "/role/addRole",
           method: "post",
           data: this.tempRole
         }).then(() => {
@@ -182,7 +190,7 @@
         }
         //修改角色
         this.api({
-          url: "/user/updateRole",
+          url: "/role/updateRole",
           method: "post",
           data: this.tempRole
         }).then(() => {
@@ -208,7 +216,7 @@
         let roles = this.list;
         let result = true;
         for (let j = 0; j < roles.length; j++) {
-          if (roles[j].roleName === roleName && (!roleId || roles[j].roleId !== roleId  )) {
+          if (roles[j].roleName === roleName && (!roleId || roles[j].id !== roleId  )) {
             this.$message.error("角色名称已存在");
             result = false;
             break;
@@ -225,11 +233,9 @@
         }).then(() => {
           let role = _vue.list[$index];
           _vue.api({
-            url: "/user/deleteRole",
+            url: "/role/deleteRole",
             method: "post",
-            data: {
-              roleId: role.roleId
-            }
+            data: [role.id]
           }).then(() => {
             _vue.getList()
           }).catch(e => {
@@ -322,6 +328,21 @@
             this.addUnique(perm.id, this.tempRole.permissions)
           }
         }
+      },
+       handleSizeChange(val) {
+        //改变每页数量
+        this.listQuery.pageRow = val
+        this.handleFilter();
+      },
+      handleCurrentChange(val) {
+        //改变页码
+        this.listQuery.pageNum = val
+        this.getList();
+      },
+      handleFilter() {
+        //查询事件
+        this.listQuery.pageNum = 1
+        this.getList()
       }
     }
   }

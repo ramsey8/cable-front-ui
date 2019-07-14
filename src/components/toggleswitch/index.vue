@@ -56,6 +56,7 @@ export default {
   },
   watch: {
     value: function(val) {
+      console.log("val ====" + val)
       this.value = val;
     }
   },

@@ -159,6 +159,7 @@
         })
       },
       getList() {
+        console.log('getlist ==== ')
         //查询列表
         this.listLoading = true;
         this.api({
@@ -288,6 +289,8 @@
             type: 'success',
             duration: 1 * 1000,
             onClose: () => {
+              console.log('haha')
+              _vue.list = []
               _vue.getList();
             }
           })
